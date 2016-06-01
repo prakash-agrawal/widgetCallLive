@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="Agile-all" systemlibrary="false">
+        <archive path="/AgileBria/src/lib/commons-codec-1.10-javadoc.jar"/>
+        <archive path="/AgileBria/src/lib/commons-codec-1.10-sources.jar"/>
+        <archive path="/AgileBria/src/lib/commons-codec-1.10-test-sources.jar"/>
+        <archive path="/AgileBria/src/lib/commons-codec-1.10-tests.jar"/>
+        <archive path="/AgileBria/src/lib/commons-codec-1.10.jar"/>
+        <archive path="/AgileBria/src/lib/forms-1.3.0.jar"/>
+        <archive path="/AgileBria/src/lib/json.jar"/>
+        <archive path="/AgileBria/src/lib/Pubnub-3.3.jar"/>
+    </library>
+    <library name="lib" systemlibrary="false">
+        <archive path="/TestBria/forms-1.3.0.jar"/>
+        <archive path="/TestBria/src/lib/commons-codec-1.10-javadoc.jar"/>
+        <archive path="/TestBria/src/lib/commons-codec-1.10-sources.jar"/>
+        <archive path="/TestBria/src/lib/commons-codec-1.10-test-sources.jar"/>
+        <archive path="/TestBria/src/lib/commons-codec-1.10-tests.jar"/>
+        <archive path="/TestBria/src/lib/commons-codec-1.10.jar"/>
+        <archive path="/TestBria/src/lib/Pubnub-3.3.jar"/>
+        <archive path="/TestBria/src/lib/json.jar"/>
+    </library>
+    <library name="proxy-all" systemlibrary="false">
+        <archive path="/bria/src/lib/commons-codec-1.10-javadoc.jar"/>
+        <archive path="/bria/src/lib/commons-codec-1.10-sources.jar"/>
+        <archive path="/bria/src/lib/commons-codec-1.10-test-sources.jar"/>
+        <archive path="/bria/src/lib/commons-codec-1.10-tests.jar"/>
+        <archive path="/bria/src/lib/commons-codec-1.10.jar"/>
+    </library>
+</eclipse-userlibraries>
