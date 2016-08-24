@@ -62,8 +62,7 @@ public class MainPage {
 			Logger logger = Logger.getLogger(MainPage.class);
 			logger.info(".......##$$$$$$$...........................");
 			logger.info("Application initialised - path  " + userPath);
-			logger.info("version 1.0 date 13/05/2016 6:00 pm");
-			logger.info("version 1.1 date 26/05/2016 6:00 pm");
+			logger.info("version 1.2 date 10/08/2016 6:00 pm");
 			
 			
 			
