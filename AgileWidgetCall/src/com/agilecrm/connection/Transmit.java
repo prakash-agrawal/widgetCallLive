@@ -31,7 +31,7 @@ public class Transmit {
 	public static LinkedBlockingQueue<JSONObject> logQueue = new LinkedBlockingQueue<JSONObject>();
 	public static Logger logger = Logger.getLogger(Transmit.class);
 	private int repeat = 0;
-	private int timeout = 500;
+	private int timeout = 1500;
 	
 	public static void start() {
 
@@ -110,7 +110,7 @@ public class Transmit {
 			int repeat = 0;
 			boolean flag = false;
 			
-			while(!flag && repeat <= 5){
+			while(!flag && repeat <= 3){
 				try {	
 					URL url = new URL(agileURL + "?prak=" + urlParameters);
 					HttpURLConnection connection = (HttpURLConnection) url
@@ -150,9 +150,9 @@ public class Transmit {
 				// for beta..
 				//agileURL = "https://" + domain+ "-dot-sandbox-dot-agilecrmbeta.appspot.com/GetInformUser";
 				// for version..
-				agileURL = "https://" + domain+ "-dot-24-7-dot-agile-crm-cloud.appspot.com/GetInformUser";
+				//agileURL = "https://" + domain+ "-dot-24-7-dot-agile-crm-cloud.appspot.com/GetInformUser";
 				// for live ....
-				//agileURL = "https://"+domain+".agilecrm.com/GetInformUser";
+				agileURL = "https://"+domain+".agilecrm.com/GetInformUser";
 				// for development in local....
 			}	
 		}else{
@@ -161,9 +161,9 @@ public class Transmit {
 				// for beta..
 				//agileURL = "https://" + domain+ "-dot-sandbox-dot-agilecrmbeta.appspot.com/InformUser";
 				// for version..
-				agileURL = "https://" + domain+ "-dot-24-7-dot-agile-crm-cloud.appspot.com/InformUser";
+				//agileURL = "https://" + domain+ "-dot-24-7-dot-agile-crm-cloud.appspot.com/InformUser";
 				// for live ....
-				//agileURL = "https://"+domain+".agilecrm.com/InformUser";
+				agileURL = "https://"+domain+".agilecrm.com/InformUser";
 				// for development in local....
 			}
 		}
@@ -172,7 +172,12 @@ public class Transmit {
 	
 
 	public static void addToCurrentResponse(JSONObject responseObj) {
-		responseQueue.add(responseObj);
+		try {
+			responseQueue.put(responseObj);
+		} catch (InterruptedException e) {
+			logger.info("4) Exception occured while adding in current response" + responseObj.toString());
+			e.printStackTrace();
+		}
 		logger.info("4) " + responseObj.toString() + "added in queue to send..");
 	}
 

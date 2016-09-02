@@ -237,7 +237,7 @@ public class MainPage {
 			currentUser.setId(Long.parseLong(id));
 
 			if (command.equals("testConnection")) {
-				MainPage.parameter.clearParameters();
+				//MainPage.parameter.clearParameters();
 				String[] callObjectApps = Globals.callObjectName;
 				for (String callObjectApp : callObjectApps) {
 					Globals.configuredWidget.put(callObjectApp, true);
@@ -248,7 +248,7 @@ public class MainPage {
 				Globals.configuredWidget.put(callClient, false);
 				return;
 			}else if(command.equals("busy")){
-				MainPage.parameter.clearParameters();
+				//MainPage.parameter.clearParameters();
 				return;
 			}
 			

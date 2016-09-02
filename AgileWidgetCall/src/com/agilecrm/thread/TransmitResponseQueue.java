@@ -27,6 +27,7 @@ public class TransmitResponseQueue extends Thread {
 			
 			while (true) {
 				JSONObject responseMessage = Transmit.responseQueue.take();
+				logger.info("5) data taken from response queue message is " + responseMessage);
 				Transmit transmit = new Transmit();
 				this.dataToSend = transmit.getData(responseMessage);
 				String url = transmit
