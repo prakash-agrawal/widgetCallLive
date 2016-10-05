@@ -3,7 +3,6 @@ package com.agilecrm.thread;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.agilecrm.api.CallApi;
 import com.agilecrm.connection.Transmit;
@@ -11,6 +10,8 @@ import com.agilecrm.main.Globals;
 import com.agilecrm.main.MainPage;
 import com.agilecrm.model.AgileCall;
 import com.agilecrm.util.FrameUtil;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class RunCommand extends Thread {
 	public String command;
@@ -42,12 +43,12 @@ public class RunCommand extends Thread {
 
 			if (command.equals("sendEmptyLogs")) {
 
-				JSONObject json = new JSONObject();
+				JsonObject json = new JsonObject();
 				try {
-					json.put("callType", call.getClient());
-					json.put("state", "logs");
-					json.put("data", "");
-					json.put("number", call.getNumber().split("@")[0]);
+					json.addProperty("callType", call.getClient());
+					json.addProperty("state", "logs");
+					json.addProperty("data", "");
+					json.addProperty("number", call.getNumber().split("@")[0]);
 				} catch (Exception e) {
 					logger.info("in run command --> " + e.getMessage());
 				}
@@ -57,8 +58,8 @@ public class RunCommand extends Thread {
 		}
 
 		if (command.equals("startCall")) {
-			SendCommand.sendMessage(call.getClient(), "routing");
 			callObj.startCall(call.getNumber());
+			SendCommand.sendMessage(call.getClient(), "routing");
 			SendCommand.lastSendCommand = "routing";
 		} else if (command.equals("endCall") || command.equals("ignoreCall")
 				|| command.equals("cancelCall")) {
@@ -80,35 +81,36 @@ public class RunCommand extends Thread {
 		} else if (command.equals("sendDTMF")) {
 			callObj.sendDTMF(call.getNumber(),call.getCallId());
 		} else if (command.equals("getLastCallDetail")) {
-			JSONObject json = callObj.getLastCallDetail(call.getNumber(),
+			JsonObject json = callObj.getLastCallDetail(call.getNumber(),
 					call.getCallId());
 			if (json != null) {
 				try {
-					json.put("callType", call.getClient());
-					json.put("state", "lastCallDetail");
-				} catch (JSONException e) {
+					json.addProperty("callType", call.getClient());
+					json.addProperty("state", "lastCallDetail");
+				} catch (Exception e) {
 				}
-				Transmit.addToLogResponse(json);
 				MainPage.parameter.clearParameters();
+				Transmit.addToLogResponse(json);
+				
 			}
 
 		} else if (command.equals("endCurrentCall")) {
 			SendCommand.sendMessage(call.getClient(), "error");
 			MainPage.parameter.clearParameters();
 		} else if (command.equals("getLogs")) {
-			JSONArray array = callObj.getCallLogs(call.getNumber());
-			JSONObject json = new JSONObject();
+			JsonArray array = callObj.getCallLogs(call.getNumber());
+			JsonObject json = new JsonObject();
 			if (array != null) {
 				try {
-					json.put("callType", call.getClient());
-					json.put("state", "logs");
-					if (array.length() > 0) {
-						json.put("data", array);
+					json.addProperty("callType", call.getClient());
+					json.addProperty("state", "logs");
+					if (array.size()> 0) {
+						json.add("data", array);
 					} else {
-						json.put("data", "");
+						json.addProperty("data", "");
 					}
-					json.put("number", call.getNumber().split("@")[0]);
-				} catch (JSONException e) {
+					json.addProperty("number", call.getNumber().split("@")[0]);
+				} catch (Exception e) {
 				}
 				Transmit.addToLogResponse(json);
 			}

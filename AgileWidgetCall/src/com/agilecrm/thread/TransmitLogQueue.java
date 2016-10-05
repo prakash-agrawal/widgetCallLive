@@ -5,12 +5,12 @@
 package com.agilecrm.thread;
 
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import com.agilecrm.connection.Transmit;
 import com.agilecrm.exception.ClientValidationException;
-import com.agilecrm.exception.ConnectionException;
 import com.agilecrm.main.MainPage;
+import com.agilecrm.util.SenderUtil;
+import com.google.gson.JsonObject;
 
 /**
  * @author mantra
@@ -18,7 +18,7 @@ import com.agilecrm.main.MainPage;
  */
 public class TransmitLogQueue extends Thread {
 
-	private String dataToSend = "";
+	private JsonObject dataToSend;
 	public static Logger logger = Logger.getLogger(TransmitLogQueue.class);
 
 	@Override
@@ -27,23 +27,21 @@ public class TransmitLogQueue extends Thread {
 		try {
 			
 			while (true) {
-				JSONObject responseMessage = Transmit.logQueue.take();
+				JsonObject responseMessage = Transmit.logQueue.take();
 				Transmit transmit = new Transmit();
 				this.dataToSend = transmit.getData(responseMessage);
-				String url = transmit
-						.buildURL(MainPage.currentUser.getDomain(),"POST");
-				if (url.equals("")) {
-					logger.info("5) return and not publish because the url is not defined");
-					return;
+				logger.info("5) data taken from response queue and sending to util is " + this.dataToSend);
+				if(MainPage.currentUser.getId() != null){
+				SenderUtil.publish(MainPage.currentUser.getId() + "_Channel", this.dataToSend);
+				}else{
+					logger.info("channel not declared so not sending the message :: " + this.dataToSend);
 				}
-				boolean res = transmit.establishConnection(url, this.dataToSend);
-				logger.info("5) sending done is " + res + " and url -> " + this.dataToSend);
 			}
-		} catch (ConnectionException e) {
-			logger.info(e.getMessage());
 		} catch (ClientValidationException e) {
 			logger.info(e.getMessage());
 		} catch (InterruptedException e) {
+			logger.info(e.getMessage());
+		}catch (Exception e) {
 			logger.info(e.getMessage());
 		}
 

@@ -1,18 +1,18 @@
 package com.agilecrm.model;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import com.agilecrm.api.CallApi;
 import com.agilecrm.exception.AgileApplicationException;
 import com.agilecrm.main.InitialiseListener;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.skype.Call;
 import com.skype.Call.DTMF;
-import com.skype.Friend;
 //import com.agilecrm.thread.SendCallCommand;
 import com.skype.Skype;
-import com.skype.SkypeClient;
 import com.skype.SkypeException;
 import com.skype.User;
 
@@ -25,7 +25,6 @@ public class AgileSkypeCall implements CallApi {
 	@Override
 	public boolean startCall(String number) {
 	try {
-	
 		Runtime.getRuntime().exec(new String[] {"rundll32", "url.dll,FileProtocolHandler", "callto:"+number}); 
 		return true;
 	
@@ -140,9 +139,9 @@ public class AgileSkypeCall implements CallApi {
 	 * duration changed from int to String
 	 * startTime changed from long to String
 	 */
-	public JSONObject getLastCallDetail(String number, String callId) {
+	public JsonObject getLastCallDetail(String number, String callId) {
 
-		JSONObject json = new JSONObject();
+		JsonObject json = new JsonObject();
 	try {
 		User user = Skype.getUser(number);
 		if(null == user){
@@ -151,11 +150,11 @@ public class AgileSkypeCall implements CallApi {
 		Call[] lastCalls = user.getAllCalls();
 		for(Call call : lastCalls){
 			if(call.getId().equals(callId)){
-				json.put("callId", call.getId());
-				json.put("direction", call.getType().toString().split("_")[0].toLowerCase());
-				json.put("duration", ((Integer)call.getDuration()).toString());
-				json.put("displayName", call.getPartnerDisplayName());
-				json.put("startTime", ((Long)call.getStartTime().getTime()));
+				json.addProperty("callId", call.getId());
+				json.addProperty("direction", call.getType().toString().split("_")[0].toLowerCase());
+				json.addProperty("duration", ((Integer)call.getDuration()).toString());
+				json.addProperty("displayName", call.getPartnerDisplayName());
+				json.addProperty("startTime", ((Long)call.getStartTime().getTime()));
 				break;
 			}
 		}
@@ -165,9 +164,9 @@ public class AgileSkypeCall implements CallApi {
 	}
 
 	@Override
-	public JSONArray getCallLogs(String number) {
+	public JsonArray getCallLogs(String number) {
 
-		JSONArray array = new JSONArray();
+		JsonArray array = new JsonArray();
 		try {
 				User user = Skype.getUser(number);
 				if(null == user){
@@ -179,12 +178,12 @@ public class AgileSkypeCall implements CallApi {
 				if(limit >= 20){
 					break;
 				}
-					JSONObject obj = new JSONObject();
-						obj.put("direction",call.getType().toString().split("_")[0].toLowerCase());
-						obj.put("duration", ((Integer)call.getDuration()).toString());
-						obj.put("startTime", ((Long)call.getStartTime().getTime()));
+					JsonObject obj = new JsonObject();
+						obj.addProperty("direction",call.getType().toString().split("_")[0].toLowerCase());
+						obj.addProperty("duration", ((Integer)call.getDuration()).toString());
+						obj.addProperty("startTime", ((Long)call.getStartTime().getTime()));
 					//	obj.put("displayName", call.getPartnerDisplayName());
-						array.put(obj);
+						array.add(obj);
 						limit++;
 			}
 		} catch (Exception e) {
@@ -230,6 +229,45 @@ public class AgileSkypeCall implements CallApi {
 		} catch (SkypeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This method will take the digit as extension and send it to the passed call having callid as parameter of callId one by one
+	 * @param digit
+	 * @param callId
+	 */
+	public void sendDTMF(List<String> digit, String callId) {
+		// TODO Auto-generated method stub
+		try {
+			logger.info("extension to send to call is ----  " + callId + "  -------------  " + digit.toString());
+			Call[] calls = Skype.getAllActiveCalls();
+			Call activeCall = null;
+				for(Call call : calls){
+					if(call.getId().equals(callId)){
+						activeCall = call;
+							break;
+					}
+				}
+			
+			Integer i = 0;
+				for(String dig : digit){
+					if(dig.equals("h")){
+						i = 10;
+					}else if(dig.equals("s")){
+						i=11;
+					}else{
+						i = Integer.valueOf(dig);
+					}
+						if(activeCall == null){
+							logger.info("extension not send as the call to send extension is not active ---- > " );
+							break;	
+						}
+					activeCall.send(DTMF.values()[i]);
+					logger.info("extension sent ---- > " + i);
+				}
+		} catch (SkypeException e) {
+			logger.info("exception in sending exxtension while connected --" + e.getMessage());
 		}
 	}
 }

@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,6 +13,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,12 +28,23 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang.SystemUtils;
 import org.apache.log4j.Logger;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import com.agilecrm.api.CallApi;
 import com.agilecrm.bria.BriaApiPipe;
+import com.agilecrm.bria.MessageBuilder;
 import com.agilecrm.connection.Transmit;
 import com.agilecrm.image.ImageClass;
 import com.agilecrm.model.AgileCall;
@@ -38,6 +56,7 @@ import com.agilecrm.thread.SendCommand;
 import com.agilecrm.util.FrameUtil;
 import com.skype.Skype;
 import com.skype.SkypeException;
+import com.skype.Call.DTMF;
 
 public class MainPage {
 
@@ -47,22 +66,21 @@ public class MainPage {
 	public static CommandParameters parameter = new CommandParameters();
 	public static int count = 0; // count the progress of progress bar
 	private static String userPath = System.getProperty("user.dir");
-	
-	
+	public static boolean hasExtension = false;
+	public static Logger logger;
 	public static void main(String arr[]) {
 				
-	
-		if(!SystemUtils.IS_OS_WINDOWS){
+/*		if(!SystemUtils.IS_OS_WINDOWS){
 		          JOptionPane.showMessageDialog(null,
 		  					" Sorry, this program can only be run on Windows OS","Error",0);
 				System.exit(0);
-		}
+		}*/
 		
 			System.setProperty("log", userPath);
-			Logger logger = Logger.getLogger(MainPage.class);
+			logger = Logger.getLogger(MainPage.class);
 			logger.info(".......##$$$$$$$...........................");
 			logger.info("Application initialised - path  " + userPath);
-			logger.info("version 1.2 date 10/08/2016 6:00 pm");
+			logger.info("version 2.0 date 29/09/2016 6:00 pm");
 			
 			
 			
@@ -76,11 +94,12 @@ public class MainPage {
 			InputStream success = new ImageClass()
 					.getImageAsStream("success.png");
 			count = 30;
+			checkForExistingUserId(null);
+			Transmit.start();
+			SendCommand.sendMessage("Agile", "initializing");
 			BufferedImage biSuccess = ImageIO.read(success);
 			count = 50;
 			startCallApps();
-			count = 95;
-			Transmit.start();
 			count = 100;
 			// this thread sends the response from the client to the agile
 			// server.
@@ -117,6 +136,107 @@ public class MainPage {
 				System.exit(0);
 			}
 		}
+	}
+
+	/**
+	 * This will read the xml file and load user id to local parameter if the userid doesnot match to the existing user id
+	 */
+	private static void checkForExistingUserId(String userId) {
+		
+		
+		// we will only read the userid if the currentuser id is null or doesnot match with the existing one
+		if(userId != null && currentUser.getId()!=null && !userId.equalsIgnoreCase(currentUser.getId())){
+			return;
+		}
+		
+		File file = new File(userPath+File.separator+"log"+File.separator+"appuser.xml");
+		if(!file.exists()){
+			logger.info("user file doesnot exist to read from and returning");
+			return;
+		}
+		String id = readIdFromXML(file);
+		if(id != null || !id.equalsIgnoreCase("null") || !id.equalsIgnoreCase("")){
+			currentUser.setId(id);
+		}
+	}
+
+/**
+ * we are reading user id from the xml file and send null if file not present
+ */
+	private static String readIdFromXML(File file) {
+		String id = null;
+		SAXBuilder saxBuilder = new SAXBuilder();
+		try {
+			org.jdom2.Document document = saxBuilder.build(file);
+			System.out.println("Root element :" + document.getRootElement().getName());
+			 org.jdom2.Element usersElement = document.getRootElement();
+			id = usersElement.getChild("user").getChildText("id");
+			logger.info("id found for user and id is ---> " + id);
+		} catch (JDOMException | IOException e) {
+			logger.info("exception occured in reading user data from xml -->" + e.getMessage() );
+		}
+		return id;
+	}
+
+	/**
+	 * this is used to write the user id in xml file
+	 * @param id
+	 */
+	private static void writeIdToXML(String id) {
+		// check if the folder exist or not... If not then return from the function
+		if(currentUser.getId() != null && currentUser.getId().equalsIgnoreCase(id)){
+			return;
+		}
+		currentUser.setId(id);
+		 Path path = Paths.get(userPath+File.separator +"log");
+         if(Files.notExists(path,LinkOption.NOFOLLOW_LINKS)){
+        	 logger.info("data not written to xml and returning in wrtiting user data as file doesnot exist");
+        	return; 
+         }
+		//create xml document................
+		DocumentBuilderFactory dbFactory =
+		         DocumentBuilderFactory.newInstance();
+		
+		try {
+			DocumentBuilder dBuilder = 
+			        dbFactory.newDocumentBuilder();
+			Document doc = dBuilder.newDocument();
+			 // root element
+	         Element rootElement = doc.createElement("users");
+	         doc.appendChild(rootElement);
+
+	         //child of root
+	         Element user = doc.createElement("user");
+	         rootElement.appendChild(user);
+	         
+	         // element inside user tag
+	         Element userId = doc.createElement("id");
+	         userId.appendChild(doc.createTextNode(id));
+	         user.appendChild(userId);
+	         
+	         //write to xml file now.................
+	         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+	         Transformer transformer = transformerFactory.newTransformer();
+	         DOMSource source = new DOMSource(doc);
+	        
+	         File file = new File(userPath+File.separator+"log"+File.separator+"appuser.xml");
+	         
+	         if(!file.exists()){
+	        	boolean bool = file.createNewFile();
+	        	if(!bool){
+	        		logger.info("error in creating xml file");
+	        		return;
+	        	}
+	         }else{
+	        	 logger.info("file already exists and writing users data to existing file");
+	         }
+	         
+	         StreamResult result = new StreamResult(file);
+	         transformer.transform(source, result);
+	         
+		} catch (Exception e) {
+			logger.info("Error whiile writing id to users xml ---->" + e.getMessage());
+		} 
 	}
 
 	private static void showUiToClient() {
@@ -210,13 +330,29 @@ public class MainPage {
 			
 			message = URLDecoder.decode(message, "UTF-8");
 			//System.out.println(message);
+			System.out.println(DTMF.values());
 			data = message.split(";");
+			System.out.println(new MessageBuilder().sendDTMF("123").build().toString());
 			String command = data[0].substring(data[0].indexOf("=") + 1);
 			String number = data[1].substring(data[1].indexOf("=") + 1);
 			String callId = data[2].substring(data[2].indexOf("=") + 1);
 			String domain = data[3].substring(data[3].indexOf("=") + 1);
 			String id = data[4].substring(data[4].indexOf("=") + 1);
 			String callClient = data[5].substring(data[5].indexOf("=") + 1);
+			String extension = "";
+			if(data.length >6 ){
+				extension = data[6].substring(data[6].indexOf("=") + 1);
+				if(command.equalsIgnoreCase("startCall") && extension != null && !extension.equals("")){
+					hasExtension = true;
+					List<String> extList = new ArrayList<String>();
+					for(int i=0;i<extension.length();i++){
+						extList.add(extension.substring(i, i+1));
+					}
+					parameter.setExtension(extList);
+					
+				}
+			}
+			
 
 		      // Create a Pattern object to decode the phone number 
 				  String pattern = "\\+{1}.*";
@@ -234,7 +370,8 @@ public class MainPage {
 			      }
 			      
 			currentUser.setDomain(domain);
-			currentUser.setId(Long.parseLong(id));
+			writeIdToXML(id);
+			//currentUser.setId(id);
 
 			if (command.equals("testConnection")) {
 				//MainPage.parameter.clearParameters();
@@ -263,6 +400,7 @@ public class MainPage {
 						call.setNumber(number);
 						Thread t = new RunCommand("sendEmptyLogs", call);
 						t.start();
+						t.join();
 						return;
 					}
 					SendCommand.sendMessage(callClient, "closed");
@@ -290,7 +428,7 @@ public class MainPage {
 
 			Thread t = new RunCommand(command, call);
 			t.start();
-
+			t.join();
 		} catch (Exception e) {
 			return;
 		}

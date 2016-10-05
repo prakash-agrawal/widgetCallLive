@@ -1,6 +1,8 @@
 package com.agilecrm.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommandParameters {
@@ -9,6 +11,7 @@ public class CommandParameters {
 	private String number = "";
 	private String callId = "";
 	private String callClient = "";
+	private List<String> extension = new ArrayList<String>();
 	public Map<String, String> logNumber = new HashMap<String, String>();
 	
 
@@ -48,6 +51,12 @@ public class CommandParameters {
 	}
 	public void setLogNumber(Map<String, String> logNumber) {
 		this.logNumber = logNumber;
+	}
+	public List<String> getExtension() {
+		return extension;
+	}
+	public void setExtension(List<String> extension) {
+		this.extension = extension;
 	}
 
 

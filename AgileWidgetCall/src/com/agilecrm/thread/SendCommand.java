@@ -3,9 +3,6 @@ package com.agilecrm.thread;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.agilecrm.bria.Message;
 import com.agilecrm.bria.MessageBuilder;
@@ -16,6 +13,8 @@ import com.agilecrm.main.BriaRemote;
 import com.agilecrm.main.MainPage;
 import com.agilecrm.model.AgileCall;
 import com.agilecrm.util.FrameUtil;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class SendCommand extends Thread {
 	public String command;
@@ -37,38 +36,38 @@ public class SendCommand extends Thread {
 					return;
 				}
 				lastSendCommand = "missed";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("routing")) {
 				lastSendCommand = "routing";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("ringing")) {
 				if (lastSendCommand.equals("ringing")) {
 					return;
 				}
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				lastSendCommand = "ringing";
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("connected")) {
 				if (lastSendCommand.equals("connected")) {
 					return;
 				}
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				lastSendCommand = "connected";
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("connecting")) {
 				if (lastSendCommand.equals("connecting")) {
 					return;
 				}
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				lastSendCommand = "connecting";
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("failed")) {
 				if (lastSendCommand.equals("failed")) {
 					return;
 				}
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				lastSendCommand = "failed";
 				Transmit.addToCurrentResponse(obj);
 			} else if (command.equals("busy")) {
@@ -76,38 +75,39 @@ public class SendCommand extends Thread {
 					return;
 				}
 				lastSendCommand = "busy";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				Transmit.addToLogResponse(obj);
 			}else if (command.equals("refused")) {
 				if (lastSendCommand.equals("refused")) {
 					return;
 				}
 				lastSendCommand = "refused";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				Transmit.addToLogResponse(obj);
 			}else if (command.equals("ended")) {
 				if (lastSendCommand.equals("ended")) {
 					return;
 				}
 				lastSendCommand = "ended";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				Transmit.addToCurrentResponse(obj);
 				checkForMute();
 			} else if (command.equals("lastCallDetail")) {
+				logger.info("last call detail command received for call client " + call.getClient());
 				if (lastSendCommand.equals("lastCallDetail")) {
 					return;
 				}
 				lastSendCommand = "lastCallDetail";
-				JSONObject obj = createCommandObject(command);
+				JsonObject obj = createCommandObject(command);
 				if (null == obj) {
 					sendMessage(call.getClient(), "error");
 					return;
 				}
-				Transmit.addToLogResponse(obj);
 				MainPage.parameter.clearParameters();
+				Transmit.addToLogResponse(obj);
 			} else if (command.equals("logs")) {
 				lastSendCommand = "logs";
-				JSONObject obj = createArrayCommand(command);
+				JsonObject obj = createArrayCommand(command);
 				Transmit.addToLogResponse(obj);
 			}
 			
@@ -132,9 +132,9 @@ public class SendCommand extends Thread {
 		}
 	}
 
-	public JSONObject createCommandObject(String state) {
+	public JsonObject createCommandObject(String state) {
 
-		JSONObject obj = new JSONObject();
+		JsonObject obj = new JsonObject();
 		String displayName = "";
 		String number = MainPage.parameter.getNumber().split("@")[0];
 		String callId = "";
@@ -143,7 +143,7 @@ public class SendCommand extends Thread {
 		try {
 			String callClient = call.getClient();
 
-			obj.put("callType", callClient);
+			obj.addProperty("callType", callClient);
 
 			if (state.equals("lastCallDetail")) {
 
@@ -179,9 +179,9 @@ public class SendCommand extends Thread {
 					}
 
 				}
-				obj.put("displayName", displayName);
-				obj.put("duration", duration);
-				obj.put("direction", direction);
+				obj.addProperty("displayName", displayName);
+				obj.addProperty("duration", duration);
+				obj.addProperty("direction", direction);
 			} else {
 				if (null != call) {
 					//number = call.getNumber();
@@ -191,9 +191,9 @@ public class SendCommand extends Thread {
 				}
 			}
 
-			obj.put("state", state);
-			obj.put("callId", callId);
-			obj.put("number", number);
+			obj.addProperty("state", state);
+			obj.addProperty("callId", callId);
+			obj.addProperty("number", number);
 
 		} catch (Exception e) {
 			logger.info(e.getMessage());
@@ -209,18 +209,18 @@ public class SendCommand extends Thread {
 	 * @param command
 	 * @return
 	 */
-	public JSONObject createArrayCommand(String state) {
+	public JsonObject createArrayCommand(String state) {
 		String direction;
 		Integer duration;
 		Long startTime;
 
-		JSONObject json = new JSONObject();
+		JsonObject json = new JsonObject();
 
-		JSONArray array = new JSONArray();
+		JsonArray array = new JsonArray();
 		try {
 			String callClient = call.getClient();
-			json.put("callType", callClient);
-			json.put("state", state);
+			json.addProperty("callType", callClient);
+			json.addProperty("state", state);
 			if (callClient.equals("Bria")) {
 				List<CallHistoryEntry> callHistory = BriaRemote.briaModel
 						.getCallHistoryEntries();
@@ -260,17 +260,17 @@ public class SendCommand extends Thread {
 						}
 						duration = BriaRemote.briaModel.getCallHistoryEntries()
 								.get(i).getDuration();
-						JSONObject obj = new JSONObject();
+						JsonObject obj = new JsonObject();
 
-						obj.put("direction", direction);
-						obj.put("duration", duration.toString());
-						obj.put("startTime", startTime);
-						array.put(obj);
+						obj.addProperty("direction", direction);
+						obj.addProperty("duration", duration.toString());
+						obj.addProperty("startTime", startTime);
+						array.add(obj);
 					}
 				}
-				json.put("number", logNumber);
+				json.addProperty("number", logNumber);
 			}
-			json.put("data", array);
+			json.add("data", array);
 		} catch (Exception e) {
 			logger.info(e.getMessage());
 		}
@@ -279,11 +279,11 @@ public class SendCommand extends Thread {
 	}
 
 	public static void sendMessage(String type, String state) {
-		JSONObject obj = new JSONObject();
+		JsonObject obj = new JsonObject();
 		try {
-			obj.put("callType", type);
-			obj.put("state", state);
-		} catch (JSONException e1) {
+			obj.addProperty("callType", type);
+			obj.addProperty("state", state);
+		} catch (Exception e1) {
 			logger.info(e1.getMessage());
 		}
 		

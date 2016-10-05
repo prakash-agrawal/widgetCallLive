@@ -1,22 +1,22 @@
 package com.agilecrm.model;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 public class AgileUser {
 
-	private Long id;
+	private String id;
 	private String name = null;
 	private String domain;
 	private String email;
-	private JSONObject json;
+	private JsonObject json;
 
 
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
@@ -53,11 +53,11 @@ public class AgileUser {
 	}
 
 
-	public JSONObject getJson() {
+	public JsonObject getJson() {
 		return json;
 	}
 
-	public void setJson(JSONObject json) {
+	public void setJson(JsonObject json) {
 		this.json = json;
 	}
 	

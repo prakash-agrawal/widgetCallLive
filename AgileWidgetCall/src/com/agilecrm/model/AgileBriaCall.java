@@ -1,10 +1,10 @@
 package com.agilecrm.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import com.agilecrm.api.CallApi;
 import com.agilecrm.bria.Message;
@@ -16,6 +16,11 @@ import com.agilecrm.bria.enums.CallType;
 import com.agilecrm.bria.enums.DialType;
 import com.agilecrm.exception.AgileApplicationException;
 import com.agilecrm.main.BriaRemote;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.skype.Skype;
+import com.skype.SkypeException;
+import com.skype.Call.DTMF;
 
 public class AgileBriaCall implements CallApi {
 
@@ -135,7 +140,7 @@ public class AgileBriaCall implements CallApi {
 	}
 
 	@Override
-	public JSONObject getLastCallDetail(String number, String callId) {
+	public JsonObject getLastCallDetail(String number, String callId) {
 
 		Message callHistoryMessage = new MessageBuilder().callHistory(3,
 				CallType.ALL).build();
@@ -145,7 +150,7 @@ public class AgileBriaCall implements CallApi {
 	}
 
 	@Override
-	public JSONArray getCallLogs(String number) {
+	public JsonArray getCallLogs(String number) {
 
 		Message callHistoryMessage = new MessageBuilder().callHistory(100,
 				CallType.ALL).build();
@@ -178,7 +183,33 @@ public class AgileBriaCall implements CallApi {
 		}
 		Message sendDTMF = new MessageBuilder().sendDTMF(i).build();
 		BriaRemote.apiPipe.writeMessage(sendDTMF);
+		logger.info("message is ------" + sendDTMF.toString() +"----"+ digit);
 
+	}
+	
+	public void sendDTMF(List<String> digit, String callId) {
+		// TODO Auto-generated method stub
+		
+		try {
+			logger.info("extension to send to call is ----  " + callId + "  -------------  " + digit.toString());
+			
+			String i = "0";
+			for(String dig : digit){
+				if(dig.equals("h")){
+					i = "#";
+				}else if(dig.equals("s")){
+					i= "*";
+				}else{
+					i = dig;
+				}
+				Message sendDTMF = new MessageBuilder().sendDTMF(i).build();
+				BriaRemote.apiPipe.writeMessage(sendDTMF);
+				logger.info("extension sent using bria---- > " + i);
+			}
+		} catch (Exception e) {
+			logger.info("exception in sending exxtension while connected --" + e.getMessage());
+		}
+		
 	}
 
 }

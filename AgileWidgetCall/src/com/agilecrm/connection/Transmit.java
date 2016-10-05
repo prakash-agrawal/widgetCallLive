@@ -12,14 +12,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.agilecrm.exception.ClientValidationException;
 import com.agilecrm.exception.ConnectionException;
 import com.agilecrm.main.MainPage;
 import com.agilecrm.thread.TransmitLogQueue;
 import com.agilecrm.thread.TransmitResponseQueue;
+import com.agilecrm.util.SenderUtil;
+import com.google.gson.JsonObject;
 
 /**
  * @author mantra
@@ -27,10 +27,10 @@ import com.agilecrm.thread.TransmitResponseQueue;
  */
 public class Transmit {
 
-	public static BlockingQueue<JSONObject> responseQueue = new LinkedBlockingQueue<JSONObject>();
-	public static LinkedBlockingQueue<JSONObject> logQueue = new LinkedBlockingQueue<JSONObject>();
+	public static BlockingQueue<JsonObject> responseQueue = new LinkedBlockingQueue<JsonObject>();
+	public static LinkedBlockingQueue<JsonObject> logQueue = new LinkedBlockingQueue<JsonObject>();
 	public static Logger logger = Logger.getLogger(Transmit.class);
-	private int repeat = 0;
+	//private int repeat = 0;
 	private int timeout = 1500;
 	
 	public static void start() {
@@ -39,6 +39,7 @@ public class Transmit {
 
 			Thread tmq = new TransmitResponseQueue();
 			Thread tlq = new TransmitLogQueue();
+			SenderUtil sender = new SenderUtil();
 			tmq.setPriority(Thread.MAX_PRIORITY);
 			tlq.start();
 			tmq.start();
@@ -49,21 +50,20 @@ public class Transmit {
 
 	}
 	
-	public String getData(Object message) throws ClientValidationException {
+	public JsonObject getData(Object message) throws ClientValidationException {
 
-		String data = "";
+		JsonObject dataObj ;
 		try {
-			JSONObject dataObj = (JSONObject) message;
+			 dataObj = (JsonObject) message;
 			if (null != MainPage.currentUser.getId()) {
-				String userId = MainPage.currentUser.getId().toString();
-				dataObj.put("userId", userId);
-				dataObj.put("type", "call");
-				data = dataObj.toString();
+				String userId = MainPage.currentUser.getId();
+				dataObj.addProperty("userId", userId);
+				dataObj.addProperty("type", "call");
 			}
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			throw new ClientValidationException(e);
 		}
-		return data;
+		return dataObj;
 	}
 	
 	public boolean establishConnection(String agileURL, String urlParameters)
@@ -170,8 +170,8 @@ public class Transmit {
 		return agileURL;
 	}
 	
-
-	public static void addToCurrentResponse(JSONObject responseObj) {
+	public static void addToCurrentResponse(JsonObject responseObj) {
+		
 		try {
 			responseQueue.put(responseObj);
 		} catch (InterruptedException e) {
@@ -180,10 +180,17 @@ public class Transmit {
 		}
 		logger.info("4) " + responseObj.toString() + "added in queue to send..");
 	}
-
-	public static void addToLogResponse(JSONObject responseObj) {
-		logQueue.add(responseObj);
+	
+	public static void addToLogResponse(JsonObject responseObj) {
+		
+		try{
+			logQueue.put(responseObj);
+		}catch (InterruptedException e) {
+			logger.info("4) Exception occured while adding in current response" + responseObj.toString());
+			e.printStackTrace();
+		}
 		logger.info("4) " + responseObj.toString()+ "added in queue to send..");
+		
 	}
 
 }

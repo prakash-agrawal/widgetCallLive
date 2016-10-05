@@ -60,10 +60,14 @@ public class Progress extends Thread implements ActionListener {
 				}
 				Thread.sleep(delay);
 			}
-
-			if (MainPage.count < 100) {
-				return;
+			while(true){
+				if (MainPage.count < 100) {
+					Thread.sleep(3000);
+				}else{
+					break;
+				}
 			}
+			
 			MainPage.count = 0;
 			// removing progres bar....
 			frame.remove(progressBar);

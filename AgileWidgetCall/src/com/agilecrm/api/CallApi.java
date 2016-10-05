@@ -1,7 +1,8 @@
 package com.agilecrm.api;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public interface CallApi {
 
@@ -19,9 +20,9 @@ public interface CallApi {
 	
 	public void sendDTMF(String digit, String callId);
 	
-	public JSONObject getLastCallDetail(String number, String callId);
+	public JsonObject getLastCallDetail(String number, String callId);
 	
-	public JSONArray getCallLogs(String number);
+	public JsonArray getCallLogs(String number);
 	
 	public CallApi startApp();
 	

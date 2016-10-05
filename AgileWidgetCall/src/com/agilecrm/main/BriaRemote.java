@@ -47,6 +47,7 @@ import com.agilecrm.bria.enums.MessageBodyType;
 import com.agilecrm.bria.enums.StatusType;
 import com.agilecrm.exception.AgileApplicationException;
 import com.agilecrm.exception.PipeNotAvailableException;
+import com.agilecrm.model.AgileBriaCall;
 import com.agilecrm.model.AgileCall;
 import com.agilecrm.model.BriaModel;
 import com.agilecrm.thread.SendCommand;
@@ -223,6 +224,11 @@ public class BriaRemote {
 						else {
 							if (SendCommand.lastSendCommand.equals("connected")) {
 								return;
+							}
+							if(MainPage.hasExtension){
+								AgileBriaCall briaCallObj = new AgileBriaCall();
+								briaCallObj.sendDTMF(MainPage.parameter.getExtension(), call.getId());
+								MainPage.hasExtension = false;
 							}
 							Thread t = new SendCommand("connected",callObj);
 							t.start();
